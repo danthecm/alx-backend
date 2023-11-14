@@ -1,31 +1,72 @@
-#!/usr/bin/env python3
-"""A module containing a caching class that uses the LRU algorithm"""
+#!/usr/bin/python3
+'''
+LRU (Least Recently Used) caching
+'''
+
+
 from base_caching import BaseCaching
 
 
 class LRUCache(BaseCaching):
-    """A class that inherits from BaseCaching and caches with LRU algorithm"""
+    '''
+    LRUCache class using LRU caching and inherits from BaseCaching
+    '''
+
     def __init__(self):
-        """Initialize the class instance"""
+        '''
+        Initializes the class
+        '''
         super().__init__()
-        self.key_tracker = {}
+        self.stack = []
 
     def put(self, key, item):
-        """A method that adds key/value pair to the cache"""
-        if key is not None and item is not None:
-            if len(self.cache_data) >= self.MAX_ITEMS:
-                # Find the LRU item and remove it
-                lru_key = min(self.key_tracker, key=self.key_tracker.get)
-                print(f"DISCARD: {lru_key}")
-                del self.key_tracker[lru_key]
-                del self.cache_data[lru_key]
-            if not self.key_tracker.get(key):
-                self.key_tracker[key] = 0
-            self.cache_data[key] = item
+        '''
+        Adds item to dictionary
+
+        Args:
+            key: Key value to reference dictionary
+            item: Value to be inserted in dictionary
+
+        Return: Dictionary updated
+        '''
+        if key is None or item is None:
+            return
+
+        self.cache_data[key] = item
+
+        if len(self.cache_data) > BaseCaching.MAX_ITEMS:
+            to_discard = self.stack.pop(0)
+            del self.cache_data[to_discard]
+            print("DISCARD: {}".format(to_discard))
+
+        if key not in self.stack:
+            self.stack.append(key)
+        else:
+            self.reorder(key=key)
 
     def get(self, key):
-        """A method that retrieves an item from the cache"""
-        if key in self.cache_data:
-            self.key_tracker[key] += 1
-            return self.cache_data[key]
-        return None
+        '''
+        Returns items from dictionary based on key
+
+        Args:
+            key: Key value to obtain value
+
+        Return: Valued represented by key
+        '''
+        value = self.cache_data.get(key, None)
+        if value is not None:
+            self.reorder(key=key)
+        return value
+
+    def reorder(self, key):
+        '''
+        Assist function to move elements to end of list
+
+        Args:
+            key: Key to determine value to move
+
+        Return: Reorder List
+        '''
+        if self.stack[-1] != key:
+            self.stack.remove(key)
+            self.stack.append(key)
